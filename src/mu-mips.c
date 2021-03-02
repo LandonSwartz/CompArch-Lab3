@@ -348,7 +348,7 @@ void EX()
 	/*IMPLEMENT THIS*/
 }
 
-//This is where the instruction is actually determined
+//This is where the instruction is actually determined by the bit fields
 /************************************************************/
 /* instruction decode (ID) pipeline stage:                                                         */ 
 /************************************************************/
@@ -363,7 +363,8 @@ void ID()
 void IF()
 {
 	ID_IF.IR = mem_read_32(CURRENT_STATE.PC)
-	ID_IF.PC = //put in program counter
+	ID_IF.PC = CURRENT_STATE.PC; //putting program counter into pipeline regs DON'T KNOW IF NEEDED YET
+	CURRENT_STATE.PC = CURRENT_STATE.PC + 4; //incrementing program counter by four
 	/*IMPLEMENT THIS*/
 }
 
@@ -383,6 +384,333 @@ void initialize() {
 /************************************************************/
 void print_program(){
 	/*IMPLEMENT THIS*/
+	
+	//From lab 1, need to fix leading zeroes problem
+	uint32_t instruction = (mem_read_32(addr)); //reading in address from mem
+	
+	//creating bit massk
+	unsigned opcode_mask = createMask(26,31); //last six bits mask, opcode
+	unsigned rs_mask = createMask(21,25);
+	unsigned rt_mask = createMask(16,20);
+	unsigned imm_mask = createMask(0,15);	
+	unsigned base_mask = createMask(21,25);
+	unsigned offset_mask = createMask(0,15);
+	unsigned target_mask = createMask(0,26);	
+	unsigned sa_mask = createMask(6,10);
+	unsigned branch_mask = createMask(16,20);	
+	unsigned func_mask = createMask(0,5);
+	unsigned rd_mask = createMask(11,15);
+	
+
+	//applying masks to get parts of command	
+	unsigned opcode = applyMask(opcode_mask, instruction);
+	unsigned rs = applyMask(rs_mask, instruction);
+	unsigned rt = applyMask(rt_mask, instruction);
+	unsigned immediate = applyMask(imm_mask, instruction);
+	unsigned base = applyMask(base_mask, instruction);
+	unsigned offset = applyMask(offset_mask, instruction);
+	unsigned target = applyMask(target_mask, instruction);
+	unsigned sa = applyMask(sa_mask, instruction);
+	unsigned branch = applyMask(branch_mask, instruction);
+	unsigned func = applyMask(func_mask, instruction);
+	unsigned rd = applyMask(rd_mask, instruction);
+	
+	//printf("opcode = %x      ", opcode);
+	
+	switch(opcode)
+	{
+		case 0x20000000: //add ADDI
+		{
+			printf("ADDI ");
+			printf("$%x $%x 0x%x\n", rs, rt, immediate); 
+			break;
+		}	
+		case 0x24000000: //ADDIU
+		{
+			printf("ADDIU ");
+			printf("$%x $%x 0x%04x\n", rs, rt, immediate); 
+			break;
+		}	
+		case 0x30000000: //ANDI
+		{
+			printf("ANDI ");
+			printf("$%x $%x 0x%x\n", rs, rt, immediate); 
+			break;
+		}
+		case 0x34000000: //ORI
+		{
+			printf("ORI ");
+			printf("$%x $%x, 0x%04x\n", rs, rt, immediate); 
+			break;
+		}
+		case 0x38000000: //XORI
+		{
+			printf("XORI ");
+			printf("$%x $%x 0x%x\n", rs, rt, immediate);
+			break; 
+		}
+		case 0x28000000: //STLI set on less than immediate
+		{
+			printf("STLI ");
+			printf("$%x $%x 0x%x\n", rs, rt, immediate); 
+			break;
+		}
+		case 0x8C000000: //Load Word - for now on is load/store instructions mostly
+		{
+			printf("LW ");
+			printf("$%x 0x%x $%x\n", rt, offset, base); 
+			break;
+		}
+		case 0x80000000: //Load Byte LB
+		{
+			printf("LB ");
+			printf("$%x, 0x%x $%x\n", rt, offset, base); 
+			break;
+		}
+		case 0x84000000: //Load halfword
+		{
+			printf("LH ");
+			printf("$%x 0x%x $%x)\n", rt, offset, base); 
+			break;
+		}
+		case 0x3C000000: //LUI Load Upper Immediate, was 0F
+		{
+			printf("LUI ");
+			printf("$%x 0x%x\n", rt, immediate); 
+			break;
+		}
+		case 0xAC000000: //SW Store Word
+		{
+			printf("SW ");
+			printf("$%x 0x%x $%x\n", rt, offset, base); 
+			break;
+		}
+		case 0xA0000000: //SB Store Byte CHECK FORMAT
+		{
+			printf("SB ");
+			printf("$%x 0x%x $%x\n", rt, offset, base); 
+			break;
+		}
+		case 0xA4000000: //SH Store Halfword CHECK FORMAT
+		{
+			printf("SH ");
+			printf("$%x 0x%x $%x)\n", rt, offset, base); 
+			break;
+		}
+		case 0x10000000: //BEQ Branch if equal - start of branching instructions
+		{
+			printf("BEQ ");
+			printf("$%x $%x 0x%04x\n", rs, rt, offset); 
+			break;
+		}
+		case 0x14000000: //BNE Branch on Not Equal
+		{
+			printf("BNE ");
+			printf("$%x $%x 0x%04x\n", rs, rt, offset); 
+			break;
+		}
+		case 0x18000000: //BLEZ Brnach on Less than or equal to zero 
+		{
+			printf("BLEZ ");
+			printf("$%x 0x%x\n", rs, offset); 
+			break;
+		}
+		case 0x4000000: //special branch cases
+		{	
+			switch(branch)
+			{
+				case 0x00: //BLTZ Brnach on Less than zero
+				{
+					printf("BLTZ ");
+					printf("#%x 0x%x\n", rs, offset); 
+					break;
+				}
+				case 0x10000: // BGEZ Branch on greater than or equal zero
+				{
+					printf("BGEZ ");
+					printf("$%x 0x%x\n", rs, offset); 
+					break;
+				}
+			}
+			break;	
+			
+		}
+		case 0x1C000000: //BGTZ Branch on Greater than Zero
+		{
+			printf("BLEZ ");
+			printf("$%x 0x%x\n", rs, offset); 
+			break;
+		}
+		case 0x08000000: //Jump J (bum bum bummmm bum, RIP Eddie VanHalen)
+		{
+			printf("J ");
+			printf("0x%x\n", (addr & 0xF0000000) | (target));
+			break;
+		}
+		case 0x0C000000: //JAL Jump and Link
+		{
+			printf("JAL ");
+			printf("0x%x\n", (addr & 0xF0000000) | (target));
+			break;
+		}
+		case 0x00000000: //special case when first six bits are 000000, function operations
+		{
+			switch(func)
+			{
+				case 0x20: //ADD
+				{
+					printf("ADD ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x21: //ADDU
+				{
+					printf("ADDU ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x22: //SUB
+				{
+					printf("SUB ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x23: //SUBU
+				{
+					printf("SUBU ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x18: //MULT
+				{
+					printf("MULT ");
+					printf("$%x $%x\n", rs, rt); 
+					break;
+				}
+				case 0x19: //MULTU
+				{
+					printf("MULTU ");
+					printf("$%x $%x\n", rs, rt); 
+					break;
+				}
+				case 0x1A: //DIV
+				{
+					printf("DIV ");
+					printf("$%x $%x\n", rs, rt); 
+					break;
+				}
+				case 0x1B: //DIVU
+				{
+					printf("DIVU ");
+					printf("$%x $%x\n", rs, rt); 
+					break;	
+				}
+				case 0x24: //AND
+				{
+					printf("AND ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x25: //OR
+				{
+					printf("OR ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x26: //XOR
+				{
+					printf("XOR ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x27: //NOR
+				{
+					printf("NOR ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x2A: //SLT Set on less than
+				{
+					printf("SLT ");
+					printf("$%x $%x $%x\n", rd, rs, rt);
+					break;
+				}
+				case 0x00: //SLL Shift Left Logical NEED TO CHECK FORMAT
+				{
+					printf("SLL ");
+					printf("$%x $%x %x\n", rd, rt, sa); //different from the rest with the sa thingy
+					break;
+				}
+				case 0x02: //SRL Shift Right Logical CHECK FORMAT
+				{
+					printf("SRL ");
+					printf("$%x $%x %x\n", rd, rt, sa); //different from the rest with the sa thingy
+					break;
+				}
+				case 0x03: //SRA Shift Right Arithmetic
+				{
+					printf("SRA ");
+					printf("$%x $%x %x\n", rd, rt, sa); //different from the rest with the sa thingy
+					break;
+				} 
+				case 0x10: //MFHI Move from HI
+				{
+					printf("MFHI ");
+					printf("$%x\n", rd); //only the rd register
+					break;
+				}
+				case 0x12: //MFLO Move from LO
+				{
+					printf("MFHI ");
+					printf("$%x\n", rd); //only the rd register
+					break;
+				}
+				case 0x11: //MTHI Move to HI
+				{
+					printf("MFHI ");
+					printf("$%x\n", rs); //only the rs register
+					break;
+				}
+				case 0x13: //MTLO Move to LO
+				{
+					printf("MFHI ");
+					printf("$%x\n", rs); //only the rs register
+					break;
+				}
+				case 0x08: //JR Jump Register
+				{
+					printf("JR ");
+					printf("%x\n", rs); //only the rs register
+					break;
+				}
+				case 0x09: //JALR Jump and Link Register CHECK FORMAT
+				{
+					printf("JR ");
+					if(rd == 0x1F) //if rd is all one's (or 31) then not given
+					{
+						printf("$%x\n", rs);
+					}
+					else //rd is given
+						printf("$%x $%x\n", rd, rs);
+					break;
+				}
+				case 0x0C: //SYSCALL
+				{
+					printf("SYSCALL\n");
+					break;
+				}
+			}
+
+			
+			break;
+		}			
+		default:
+		{
+			printf("Command not found...\n");
+			break;
+		}
+			
+	}	
 }
 
 /************************************************************/
