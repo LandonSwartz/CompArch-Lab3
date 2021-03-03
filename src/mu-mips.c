@@ -718,6 +718,28 @@ void print_program(){
 /************************************************************/
 void show_pipeline(){
 	/*IMPLEMENT THIS*/
+	//ID_RF part of the lab
+	printf("Current PC: %x\n", CURRENT_STATE.PC); //may need to be one the one from the pipeline regs
+	printf("IF/ID %x\n", ID_ID.IR); //double check data type and what not for this one
+	printf("IF/ID.PC %x\n", ID_IF.PC);
+	
+	//EX part
+	printf("ID/EX.IR %x\n", ID_EX.IR);
+	printf("ID/EX.A %x\n", ID_EX.A);
+	printf("ID/EX.B %x\n", ID_EX.B);
+	printf("ID/EX.imm %x\n", ID_EX.imm);
+	
+	//MEM
+	printf("EX/MEM.IR %x\n", EX_MEM.IR);
+	printf("EX/MEM.A %x\n", EX_MEM.A);
+	printf("EX?MEM.B %x\n", EX_MEM.B);
+	printf("ALUOutput %x\n", EX_MEM.ALUOutput);
+	
+	//WB
+	printf("MEM/WB.IR %x\n", MEM_WB.IR);
+	printf("MEM/WB.ALUOutput %x\n", MEM_WB.ALUOutput);
+	printf("MEM/WB.LMD %x\n", MEM_WB.LMD);
+	
 }
 
 /***************************************************************/
